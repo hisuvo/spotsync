@@ -5,8 +5,8 @@ type UserResponse struct {
 	Name     string `json:"name"`
 	Email    string `json:"email"`
 	Role     string `json:"role"`
-	CreateAt int64  `json:"created_at"`
-	UpdateAt int64  `json:"updated_at"`
+	CreateAt int64  `json:"created_at,omitempty"`
+	UpdateAt int64  `json:"updated_at,omitempty"`
 }
 
 type LoginResponse struct {

@@ -45,21 +45,7 @@ func (s *service) CreateUser(req *dto.CreateUserRequest) (*dto.UserResponse, err
 		return nil, err
 	}
 
-	// token, err := s.jwtService.GenerateToken(strconv.FormatUint(uint64(user.ID), 10), user.Name, user.Email)
-	// if err != nil {
-	// 	return nil, err
-	// }
-
-	response := dto.UserResponse{
-		ID:       uint64(user.ID),
-		Name:     user.Name,
-		Email:    user.Email,
-		Role:     user.Role,
-		CreateAt: user.CreatedAt.Unix(),
-		UpdateAt: user.UpdatedAt.Unix(),
-	}
-
-	return &response, nil
+	return user.ToResponse(), nil
 }
 
 func (s *service) LoginUser(email, password string) (*dto.LoginResponse, error) {
@@ -80,13 +66,11 @@ func (s *service) LoginUser(email, password string) (*dto.LoginResponse, error) 
 
 	response := dto.LoginResponse{
 		Token: token,
-		User: dto.UserResponse{
-			ID:       uint64(user.ID),
-			Name:     user.Name,
-			Email:    user.Email,
-			Role:     user.Role,
-			CreateAt: user.CreatedAt.Unix(),
-			UpdateAt: user.UpdatedAt.Unix(),
+		User:dto.UserResponse{
+			ID: uint64(user.ID),
+			Name: user.Name,
+			Email: user.Email,
+			Role: user.Role,
 		},
 	}
 
