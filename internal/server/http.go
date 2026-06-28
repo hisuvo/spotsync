@@ -1,9 +1,9 @@
 package server
 
 import (
-	"booking-app/internal/config"
 	"context"
 	"net/http"
+	"spotsync/internal/config"
 
 	"github.com/labstack/echo/v5"
 	"github.com/labstack/echo/v5/middleware"

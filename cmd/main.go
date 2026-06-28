@@ -1,15 +1,15 @@
 package main
 
 import (
-	"booking-app/internal/config"
-	"booking-app/internal/database"
-	"booking-app/internal/server"
+	"spotsync/internal/config"
+	"spotsync/internal/database"
+	"spotsync/internal/server"
 )
 
 func main() {
-	env := config.LoadEnv()
-	
-	db := database.ConnectDB(env)
-	
-	server.Start(db, env)
-}	
+	cnfg := config.LoadEnv()
+
+	db := database.ConnectDB(cnfg)
+
+	server.Start(db, cnfg)
+}

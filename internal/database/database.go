@@ -1,15 +1,15 @@
 package database
 
 import (
-	"booking-app/internal/config"
 	"fmt"
+	"spotsync/internal/config"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
 func ConnectDB(cfg *config.Config) *gorm.DB {
-	connStr := cfg.DatabaseUrl
+	connStr := cfg.DatabaseURL
 
 	db, err := gorm.Open(postgres.Open(connStr), &gorm.Config{
 		TranslateError: true,
