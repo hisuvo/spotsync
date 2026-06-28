@@ -4,13 +4,14 @@ import (
 	"context"
 	"net/http"
 	"spotsync/internal/config"
+	"spotsync/internal/domain/user"
 
 	"github.com/labstack/echo/v5"
 	"github.com/labstack/echo/v5/middleware"
 	"gorm.io/gorm"
 )
 
-func Start(db *gorm.DB, env *config.Config) {
+func Start(db *gorm.DB, cfg *config.Config) {
 	e := echo.New()
 
 	// Middleware
@@ -27,12 +28,13 @@ func Start(db *gorm.DB, env *config.Config) {
 
 	// Routees
 	e.GET("/", func(c *echo.Context) error {
-		
-		return c.JSON(http.StatusOK,"Welcome to the SpotSync Backend!")
+		return c.String(http.StatusOK,"Welcome to the SpotSync Backend!")
 	})
 
+	user.RegisterRoute(e, db, cfg)
+
 	// Start server
-	sc := echo.StartConfig{Address: ":"+ env.Port}
+	sc := echo.StartConfig{Address: ":"+ cfg.Port}
 	if err := sc.Start(context.Background(), e); err != nil {
 		e.Logger.Error("failed to start server", "error", err)
 	}
