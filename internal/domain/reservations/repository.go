@@ -33,7 +33,6 @@ func NewRepository(db *gorm.DB) Repository {
 	return &repository{db: db}
 }
 
-// ---------------- CREATE (SAFE TRANSACTION + LOCK) ----------------
 
 func (r *repository) Create(userID uint, req *dto.CreateReservationRequest) (*Reservation, error) {
 
@@ -90,7 +89,6 @@ func (r *repository) CountActiveReservations(zoneID uint64) (int64, error) {
 
 	return count, err
 }
-// ---------------- GET MY ----------------
 
 func (r *repository) GetMy(userID uint) ([]Reservation, error) {
 	var res []Reservation
@@ -115,8 +113,6 @@ func (r *repository) GetAll() ([]Reservation, error) {
 
 	return res, err
 }
-
-// ---------------- CANCEL ----------------
 
 func (r *repository) Cancel(userID uint, reservationID uint, isAdmin bool) error {
 
