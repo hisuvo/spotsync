@@ -5,6 +5,7 @@ import (
 
 	"spotsync/internal/domain/parkingzones"
 	"spotsync/internal/domain/reservations/dto"
+	"spotsync/internal/domain/user"
 
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -101,8 +102,6 @@ func (r *repository) GetMy(userID uint) ([]Reservation, error) {
 	return res, err
 }
 
-// ---------------- GET ALL ----------------
-
 func (r *repository) GetAll() ([]Reservation, error) {
 	var res []Reservation
 
@@ -124,6 +123,16 @@ func (r *repository) Cancel(userID uint, reservationID uint, isAdmin bool) error
 			return ErrReservationNotFound
 		}
 		return err
+	}
+
+	// Double check user role in the DB to support tokens where claims.Email contains the actual email instead of the role
+	if !isAdmin {
+		var userEntity user.User
+		if err := r.db.First(&userEntity, userID).Error; err == nil {
+			if userEntity.Role == "admin" {
+				isAdmin = true
+			}
+		}
 	}
 
 	if resv.UserID != userID && !isAdmin {

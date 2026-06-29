@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"spotsync/internal/domain/parkingzones/dto"
 	"spotsync/internal/httpresponse"
+	"spotsync/internal/middleware"
 	"strconv"
 
 	"github.com/labstack/echo/v5"
@@ -21,6 +22,15 @@ func NewHandler(service Service) *handler{
 
 // post /zones
 func (h *handler) Create(c *echo.Context) error{
+	claims := middleware.CheckUser(c)
+	if claims.Email != "admin" {
+		return c.JSON(http.StatusForbidden, httpresponse.ErrorResponse{
+			Success: false,
+			Message: "Forbidden: admin access required",
+			Errors:  map[string]string{"error": "Forbidden"},
+		})
+	}
+
 	var req dto.CreateParkingZoneRequest
 
 	if err := c.Bind(&req); err != nil{
@@ -108,6 +118,15 @@ func (h *handler) FindResponseByID(c *echo.Context) error{
 }
 
 func (h *handler) Update(c *echo.Context) error{
+	claims := middleware.CheckUser(c)
+	if claims.Email != "admin" {
+		return c.JSON(http.StatusForbidden, httpresponse.ErrorResponse{
+			Success: false,
+			Message: "Forbidden: admin access required",
+			Errors:  map[string]string{"error": "Forbidden"},
+		})
+	}
+
 	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, httpresponse.ErrorResponse{
@@ -161,6 +180,15 @@ func (h *handler) Update(c *echo.Context) error{
 }
 
 func (h *handler) Delete(c *echo.Context) error {
+	claims := middleware.CheckUser(c)
+	if claims.Email != "admin" {
+		return c.JSON(http.StatusForbidden, httpresponse.ErrorResponse{
+			Success: false,
+			Message: "Forbidden: admin access required",
+			Errors:  map[string]string{"error": "Forbidden"},
+		})
+	}
+
 	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, httpresponse.ErrorResponse{

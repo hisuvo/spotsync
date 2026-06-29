@@ -170,6 +170,15 @@ func (h *handler) Cancel(c *echo.Context) error {
 // GET /api/v1/reservations
 // Access: Admin only
 func (h *handler) GetAll(c *echo.Context) error {
+	claims := middleware.CheckUser(c)
+	if claims.Email != "admin" {
+		return c.JSON(http.StatusForbidden, httpresponse.ErrorResponse{
+			Success: false,
+			Message: "Forbidden: admin access required",
+			Errors:  map[string]string{"error": "Forbidden"},
+		})
+	}
+
 	resvs, err := h.service.GetAllReservations()
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, httpresponse.ErrorResponse{

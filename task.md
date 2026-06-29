@@ -1,0 +1,5 @@
+- [x] Update `internal/domain/parkingzones/register.go` to require authentication for POST, PUT, DELETE.
+- [x] Update `internal/domain/parkingzones/handler.go` to verify admin role in `Create`, `Update`, and `Delete` endpoints.
+- [x] Update `internal/domain/reservations/service.go` to return DTO responses and implement mapping.
+- [x] Update `internal/domain/reservations/handler.go` to verify admin role in `GetAll` endpoint.
+- [x] Compile and verify the project using `go build`.

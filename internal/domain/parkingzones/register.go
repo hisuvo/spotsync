@@ -1,7 +1,9 @@
 package parkingzones
 
 import (
+	"spotsync/internal/auth"
 	"spotsync/internal/config"
+	"spotsync/internal/middleware"
 
 	"github.com/labstack/echo/v5"
 	"gorm.io/gorm"
@@ -16,11 +18,18 @@ func RegisterRoute(e *echo.Echo, db *gorm.DB, cfg *config.Config, reservationCou
 	svc := NewParkingZoneService(repo, reservationCounter)
 	hdl := NewHandler(svc)
 
+	jwtService := auth.NewJWTService(cfg.JWTSecret, cfg.TokenDuration)
+	authMiddleware := middleware.AuthMiddleware(jwtService)
+
 	route := e.Group("/api/v1")
 
-	route.POST("/zones", hdl.Create)
+	// Protected routes (admin/authenticated check inside handler)
+	authRoute := e.Group("/api/v1", authMiddleware)
+	authRoute.POST("/zones", hdl.Create)
+	authRoute.PUT("/zones/:id", hdl.Update)
+	authRoute.DELETE("/zones/:id", hdl.Delete)
+
+	// Public routes
 	route.GET("/zones", hdl.GetAll)
 	route.GET("/zones/:id", hdl.FindResponseByID)
-	route.PUT("/zones/:id", hdl.Update)
-	route.DELETE("/zones/:id", hdl.Delete)
 }
