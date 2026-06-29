@@ -24,7 +24,19 @@ func NewHandler(service UserService, cfg *config.Config) *handler {
 func (h *handler) CreateUser(c *echo.Context) error {
 	var req dto.CreateUserRequest
 	if err := c.Bind(&req); err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+		return c.JSON(http.StatusBadRequest, httpresponse.ErrorResponse{
+				Success: false,
+				Message: "Invalid request body",
+				Errors: map[string]string{"error": err.Error()},
+			})
+	}
+
+	if err := c.Validate(req); err != nil{
+		return c.JSON(http.StatusBadRequest, httpresponse.ErrorResponse{
+				Success: false,
+				Message: "Validation failed",
+				Errors: map[string]string{"error": err.Error()},
+			})
 	}
 
 	res, err := h.service.CreateUser(&req)
@@ -33,14 +45,12 @@ func (h *handler) CreateUser(c *echo.Context) error {
 		if err == ErrorAlreadyExist {
 			return c.JSON(http.StatusConflict, httpresponse.ErrorResponse{
 				Success: false,
-				Code: http.StatusConflict,
 				Message: "User already exists",
 				Errors: map[string]string{"error": err.Error()},
 			})
 		}
 		return c.JSON(http.StatusInternalServerError, httpresponse.ErrorResponse{
 				Success: false,
-				Code: http.StatusInternalServerError,
 				Message: "Internal server error",
 				Errors: map[string]string{"error": err.Error()},
 			})
@@ -48,7 +58,6 @@ func (h *handler) CreateUser(c *echo.Context) error {
 
 	return c.JSON(http.StatusCreated, httpresponse.SuccessResponse{
 		Success: true,
-		Code: http.StatusCreated,
 		Message: "User registered successfully",
 		Data: res,
 	})
@@ -57,21 +66,40 @@ func (h *handler) CreateUser(c *echo.Context) error {
 func (h *handler) LoginUser(c *echo.Context) error {
 	var req dto.LoginRequest
 	if err := c.Bind(&req); err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+		return c.JSON(http.StatusBadRequest, httpresponse.ErrorResponse{
+				Success: false,
+				Message: "Invalid request body",
+				Errors: map[string]string{"error": err.Error()},
+			})
+	}
+
+	if err := c.Validate(req); err != nil{
+		return c.JSON(http.StatusBadRequest, httpresponse.ErrorResponse{
+				Success: false,
+				Message: "Validation failed",
+				Errors: map[string]string{"error": err.Error()},
+			})
 	}
 
 	res, err := h.service.LoginUser(req.Email, req.Password)
 
 	if err != nil {
 		if err == ErrInvalideCredentials {
-			return c.JSON(http.StatusUnauthorized, map[string]string{"error": err.Error()})
+			return c.JSON(http.StatusUnauthorized, httpresponse.ErrorResponse{
+				Success: false,
+				Message: ErrInvalideCredentials.Error(),
+				Errors: map[string]string{"error": err.Error()},
+			})
 		}
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		return c.JSON(http.StatusInternalServerError, httpresponse.ErrorResponse{
+				Success: false,
+				Message: "Internal server error",
+				Errors: map[string]string{"error": err.Error()},
+			})
 	}
 
 	return c.JSON(http.StatusOK, httpresponse.SuccessResponse{
 		Success: true,
-		Code: http.StatusOK,
 		Message: "Login successful",
 		Data: res,
 	})
