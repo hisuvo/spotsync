@@ -73,7 +73,7 @@ func (h *handler) GetAll(c *echo.Context)error{
 	})
 }
 
-func (h *handler) FindById(c *echo.Context) error{
+func (h *handler) FindResponseByID(c *echo.Context) error{
 	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, httpresponse.ErrorResponse{
@@ -83,7 +83,7 @@ func (h *handler) FindById(c *echo.Context) error{
 		})
 	}
 
-	parkingZone, err := h.service.FindById(id)
+	parkingZone, err := h.service.FindResponseByID(id)
 	if err == ErrParkingZoneNotFound {
 		return c.JSON(http.StatusNotFound, httpresponse.ErrorResponse{
 			Success: false,

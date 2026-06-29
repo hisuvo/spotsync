@@ -5,21 +5,27 @@ import (
 	"spotsync/internal/domain/parkingzones/dto"
 )
 
+type ReservationCounter interface { // todo
+	CountActiveReservations(zoneID uint64) (int64, error)
+}
+
 type Service interface {
 	Create(req *dto.CreateParkingZoneRequest) (*dto.ParkingZoneResponse, error)
-	GetAll() (*[]dto.ParkingZoneResponse, error)
-	FindById(id uint64) (*dto.ParkingZoneResponse, error)
-	Update(id uint64, req *dto.UpdateParkingZoneRequest) (*dto.UpdateParkingZoneRequest, error)
+	GetAll() ([]dto.ParkingZoneResponse, error)
+	FindResponseByID(id uint64) (*dto.ParkingZoneResponse, error)
+	Update(id uint64, req *dto.UpdateParkingZoneRequest) (*dto.ParkingZoneResponse, error)
 	Delete(id uint64) error
 }
 
 type service struct {
 	repo Repository
+	reservationRepo ReservationCounter //todo
 }
 
-func NewParkingZoneService(repo Repository) Service {
+func NewParkingZoneService(repo Repository,reservationRepo ReservationCounter) Service {
 	return &service{
 		repo: repo,
+		reservationRepo: reservationRepo,
 	}
 }
 
@@ -47,46 +53,17 @@ func (s *service) Create(req *dto.CreateParkingZoneRequest) (*dto.ParkingZoneRes
 	return &response, nil
 }
 
-func (s *service) GetAll()(*[]dto.ParkingZoneResponse,error){
-	zones, err := s.repo.GetAll()
-	if err != nil {
-		return nil, err
-	}
-	var responses []dto.ParkingZoneResponse
-	for _, zone := range *zones {
-		responses = append(responses, dto.ParkingZoneResponse{
-			ID:            uint64(zone.ID),
-			Name:          zone.Name,
-			Type:          zone.Type,
-			TotalCapacity: zone.TotalCapacity,
-			PricePerHour:  zone.PricePerHour,
-			CreatedAt:     zone.CreatedAt,
-		})
-	}
-
-	return &responses, nil
+func (s *service) GetAll() ([]dto.ParkingZoneResponse, error) {
+	return s.repo.GetAll()
 }
 
-func (s *service) FindById(id uint64) (*dto.ParkingZoneResponse, error) {
-	zone, err := s.repo.FindById(id)
-	if err != nil {
-		return nil, err
-	}
-
-	// respnse := zone.ToParkingZoneResponse()
-
-	return &dto.ParkingZoneResponse{
-		ID:            uint64(zone.ID),
-		Name:          zone.Name,
-		Type:          zone.Type,
-		TotalCapacity: zone.TotalCapacity,
-		PricePerHour:  zone.PricePerHour,
-		CreatedAt:     zone.CreatedAt,
-	}, nil
+func (s *service) FindResponseByID(id uint64) (*dto.ParkingZoneResponse, error) {
+	// Return repo result directly — it already includes AvailableSpots from the JOIN query.
+	return s.repo.FindResponseByID(id)
 }
 
-func (s *service) Update(id uint64, req *dto.UpdateParkingZoneRequest) (*dto.UpdateParkingZoneRequest, error) {
-	zone, err := s.repo.FindById(id)
+func (s *service) Update(id uint64, req *dto.UpdateParkingZoneRequest) (*dto.ParkingZoneResponse, error) {
+	zone, err := s.repo.FindByID(id)
 	if err != nil {
 		return nil, err
 	}
@@ -100,7 +77,7 @@ func (s *service) Update(id uint64, req *dto.UpdateParkingZoneRequest) (*dto.Upd
 		return nil, err
 	}
 
-	return &dto.UpdateParkingZoneRequest{
+	return &dto.ParkingZoneResponse{
 		Name:          zone.Name,
 		Type:          zone.Type,
 		TotalCapacity: zone.TotalCapacity,

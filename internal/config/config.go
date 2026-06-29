@@ -16,13 +16,12 @@ type Config struct {
 }
 
 func LoadEnv() *Config {
-	if err := godotenv.Load(); err != nil {
-		log.Fatal("No .env file found:", err)
-	}
+	// Only load .env in local dev (safe for production)
+	_ = godotenv.Load()
 
 	port := os.Getenv("PORT")
 	if port == "" {
-		log.Fatal("PORT is not set")
+		port = "8080" // safe default
 	}
 
 	dbURL := os.Getenv("DB_URL")
@@ -30,9 +29,9 @@ func LoadEnv() *Config {
 		log.Fatal("DB_URL is not set")
 	}
 
-	jwtSecret := os.Getenv("JWT_SECRET")
 	env := os.Getenv("APP_ENV")
 
+	jwtSecret := os.Getenv("JWT_SECRET")
 	if jwtSecret == "" {
 		if env == "development" {
 			jwtSecret = "dev-secret-key"
@@ -44,11 +43,11 @@ func LoadEnv() *Config {
 	duration := 24 * time.Hour
 
 	if value := os.Getenv("TOKEN_DURATION"); value != "" {
-		var err error
-		duration, err = time.ParseDuration(value)
+		d, err := time.ParseDuration(value)
 		if err != nil {
 			log.Fatalf("Invalid TOKEN_DURATION: %v", err)
 		}
+		duration = d
 	}
 
 	return &Config{

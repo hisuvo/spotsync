@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"spotsync/internal/config"
 	"spotsync/internal/domain/parkingzones"
+	"spotsync/internal/domain/reservations"
 	"spotsync/internal/domain/user"
 
 	"github.com/go-playground/validator/v10"
@@ -31,13 +32,10 @@ func Start(db *gorm.DB, cfg *config.Config) {
 	e.Use(middleware.RequestLogger())
 	e.Use(middleware.Recover())
 
+
 	// CORS default
 	// Allows request from any origin with GET, POST, PUT, HEAD OR DELETE method
 	e.Use(middleware.CORS("*"))
-
-	// CORS restricted
-	// Allows requests from any `https://spotsync.com` or `https://spotsync.net` origin
-	// e.Use(middleware.CORS("https://spotsync.com", "https://spotsync.net"))
 
 	// Routees
 	e.GET("/", func(c *echo.Context) error {
@@ -45,7 +43,12 @@ func Start(db *gorm.DB, cfg *config.Config) {
 	})
 
 	user.RegisterRoute(e, db, cfg)
-	parkingzones.RegisterRoute(e, db, cfg)
+	// Create the reservations repo here (server layer can import both domains)
+	// and inject it into parkingzones to satisfy the ReservationCounter interface,
+	// keeping parkingzones and reservations free of a mutual import cycle.
+	reservRepo := reservations.NewRepository(db)
+	parkingzones.RegisterRoute(e, db, cfg, reservRepo)
+	reservations.RegisterRoute(e, db, cfg)
 
 	// Start server
 	sc := echo.StartConfig{Address: ":"+ cfg.Port}

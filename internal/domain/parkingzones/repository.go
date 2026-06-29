@@ -2,6 +2,7 @@ package parkingzones
 
 import (
 	"errors"
+	"spotsync/internal/domain/parkingzones/dto"
 
 	"gorm.io/gorm"
 )
@@ -10,10 +11,11 @@ var ErrParkingZoneNotFound = errors.New("parking zone not found")
 var ErrParkingZoneAlreadyExists = errors.New("parking zone already exists")
 
 type Repository interface {
-	Create(parkingZone *ParkingZone)  error
-	GetAll() (*[]ParkingZone, error)
-	FindById(id uint64) (*ParkingZone, error)
-	Update(parkingZone *ParkingZone)  error
+	Create(parkingZone *ParkingZone) error
+	GetAll() ([]dto.ParkingZoneResponse, error)
+	FindByID(id uint64) (*ParkingZone, error)
+	FindResponseByID(id uint64) (*dto.ParkingZoneResponse, error)
+	Update(parkingZone *ParkingZone) error
 	Delete(id uint64) error
 }
 
@@ -34,18 +36,32 @@ func (r *repository) Create(zone *ParkingZone)  error {
 	return nil
 }
 
-func (r *repository) GetAll() (*[]ParkingZone, error) {
-	var zones *[]ParkingZone
+func (r *repository) GetAll() ([]dto.ParkingZoneResponse, error) {
+	var zones []dto.ParkingZoneResponse
 
-	err := r.db.Find(&zones).Error
+	err := r.db.
+		Table("parking_zones").
+		Select(`
+			parking_zones.id,
+			parking_zones.name,
+			parking_zones.type,
+			parking_zones.total_capacity,
+			parking_zones.price_per_hour,
+			parking_zones.created_at,
+			parking_zones.total_capacity - COALESCE(COUNT(r.id), 0) AS available_spots
+		`).
+		Joins(`LEFT JOIN reservations r ON r.zone_id = parking_zones.id AND r.status = 'active' AND r.deleted_at IS NULL`).
+		Where("parking_zones.deleted_at IS NULL").
+		Group("parking_zones.id").
+		Scan(&zones).Error
 
 	if err != nil {
-		return nil, ErrParkingZoneNotFound
+		return nil, err
 	}
 	return zones, nil
 }
 
-func (r *repository) FindById(id uint64) (*ParkingZone, error) {
+func (r *repository) FindByID(id uint64) (*ParkingZone, error) {
 	var zone ParkingZone
 	if err := r.db.Where("id = ?", id).First(&zone).Error; err != nil {
 		return nil, err
@@ -53,35 +69,35 @@ func (r *repository) FindById(id uint64) (*ParkingZone, error) {
 	return &zone, nil
 }
 
-// func (r *repository) FindByID(id uint64) (*dto.ParkingZoneResponse, error) {
-// 	var zone dto.ParkingZoneResponse
+func (r *repository) FindResponseByID(id uint64) (*dto.ParkingZoneResponse, error) {
+	var zone dto.ParkingZoneResponse
 
-// 	subQuery := r.db.
-// 		Model(&Reservation{}).
-// 		Select("COUNT(*)").
-// 		Where("reservations.parking_zone_id = parking_zones.id").
-// 		Where("status = ?", "active")
+	err := r.db.
+		Table("parking_zones").
+		Select(`
+			parking_zones.id,
+			parking_zones.name,
+			parking_zones.type,
+			parking_zones.total_capacity,
+			parking_zones.price_per_hour,
+			parking_zones.created_at,
+			parking_zones.total_capacity - COALESCE(COUNT(r.id), 0) AS available_spots
+		`).
+		Joins(`LEFT JOIN reservations r ON r.zone_id = parking_zones.id AND r.status = 'active' AND r.deleted_at IS NULL`).
+		Where("parking_zones.id = ?", id).
+		Where("parking_zones.deleted_at IS NULL").
+		Group("parking_zones.id").
+		Scan(&zone).Error
 
-// 	err := r.db.
-// 		Model(&ParkingZone{}).
-// 		Select(`
-// 			id,
-// 			name,
-// 			type,
-// 			total_capacity,
-// 			price_per_hour,
-// 			created_at,
-// 			total_capacity - (?) AS available_spots
-// 		`, subQuery).
-// 		Where("id = ?", id).
-// 		Scan(&zone).Error
+	if err != nil {
+		return nil, err
+	}
+	if zone.ID == 0 {
+		return nil, ErrParkingZoneNotFound
+	}
 
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	return &zone, nil
-// }
+	return &zone, nil
+}
 
 func (r *repository) Update(zone *ParkingZone)  error {
 	if err := r.db.Save(zone).Error; err != nil {
