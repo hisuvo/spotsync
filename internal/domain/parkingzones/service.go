@@ -72,17 +72,16 @@ func (s *service) Update(id uint64, req *dto.UpdateParkingZoneRequest) (*dto.Par
 	zone.TotalCapacity = req.TotalCapacity
 	zone.PricePerHour = req.PricePerHour
 
-	if err := s.repo.Update(zone); err != nil {
+	if err := s.repo.Update(id, zone); err != nil {
 		return nil, err
 	}
 
-	return &dto.ParkingZoneResponse{
-		Name:          zone.Name,
-		Type:          zone.Type,
-		TotalCapacity: zone.TotalCapacity,
-		PricePerHour:  zone.PricePerHour,
-		
-	}, nil
+	updatedZone, err := s.repo.FindByID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	return updatedZone.ToParkingZoneResponse(), nil
 }
 
 func (s *service) Delete(id uint64) error {

@@ -15,7 +15,7 @@ type Repository interface {
 	GetAll() ([]dto.ParkingZoneResponse, error)
 	FindByID(id uint64) (*ParkingZone, error)
 	FindResponseByID(id uint64) (*dto.ParkingZoneResponse, error)
-	Update(parkingZone *ParkingZone) error
+	Update(id uint64,parkingZone *ParkingZone) error
 	Delete(id uint64) error
 }
 
@@ -99,11 +99,10 @@ func (r *repository) FindResponseByID(id uint64) (*dto.ParkingZoneResponse, erro
 	return &zone, nil
 }
 
-func (r *repository) Update(zone *ParkingZone)  error {
-	if err := r.db.Save(zone).Error; err != nil {
-		return err
-	}
-	return nil
+func (r *repository) Update(id uint64, zone *ParkingZone) error {
+	return r.db.Model(&ParkingZone{}).
+		Where("id = ?", id).
+		Updates(zone).Error
 }
 
 func (r *repository) Delete(id uint64) error {

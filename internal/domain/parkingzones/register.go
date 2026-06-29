@@ -21,6 +21,6 @@ func RegisterRoute(e *echo.Echo, db *gorm.DB, cfg *config.Config, reservationCou
 	route.POST("/zones", hdl.Create)
 	route.GET("/zones", hdl.GetAll)
 	route.GET("/zones/:id", hdl.FindResponseByID)
-	// route.PUT("/zones/:id", hdl.Update)
-	// route.DELETE("/zones/:id", hdl.Delete)
+	route.PUT("/zones/:id", hdl.Update)
+	route.DELETE("/zones/:id", hdl.Delete)
 }
