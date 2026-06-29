@@ -5,7 +5,7 @@ import (
 	"spotsync/internal/domain/parkingzones/dto"
 )
 
-type ReservationCounter interface { // todo
+type ReservationCounter interface {
 	CountActiveReservations(zoneID uint64) (int64, error)
 }
 
@@ -19,7 +19,7 @@ type Service interface {
 
 type service struct {
 	repo Repository
-	reservationRepo ReservationCounter //todo
+	reservationRepo ReservationCounter
 }
 
 func NewParkingZoneService(repo Repository,reservationRepo ReservationCounter) Service {
@@ -58,7 +58,6 @@ func (s *service) GetAll() ([]dto.ParkingZoneResponse, error) {
 }
 
 func (s *service) FindResponseByID(id uint64) (*dto.ParkingZoneResponse, error) {
-	// Return repo result directly — it already includes AvailableSpots from the JOIN query.
 	return s.repo.FindResponseByID(id)
 }
 
